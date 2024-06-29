@@ -139,9 +139,9 @@ class ProcessamentoPedidos(QWidget):
         self.columns_layout = QHBoxLayout()
 
         # Colunas
-        self.fila_layout = self.adicionar_coluna("Na fila")
-        self.preparacao_layout = self.adicionar_coluna("Em preparação")
-        self.entregue_layout = self.adicionar_coluna("Entregue")
+        self.fila_layout = self.adicionar_coluna("Na fila", [2, 7])
+        self.preparacao_layout = self.adicionar_coluna("Em preparação", [1, 6])
+        self.entregue_layout = self.adicionar_coluna("Entregue", [6, 4])
 
         # Adicionar o layout de colunas ao layout principal
         main_layout.addLayout(self.columns_layout)
@@ -149,7 +149,7 @@ class ProcessamentoPedidos(QWidget):
         # Definir o layout principal
         self.setLayout(main_layout)
     
-    def adicionar_coluna(self, titulo):
+    def adicionar_coluna(self, titulo, pedidos):
         coluna_layout = QVBoxLayout()
         
         # Título da coluna
@@ -158,24 +158,25 @@ class ProcessamentoPedidos(QWidget):
         titulo_label.setStyleSheet("font-size: 16px;")
         coluna_layout.addWidget(titulo_label)
 
+        # Adicionar botões de pedidos
+        for pedido in pedidos:
+            pedido_button = QPushButton(str(pedido))
+            pedido_button.setFixedSize(50, 50)
+            pedido_button.clicked.connect(self.mover_pedido)
+            coluna_layout.addWidget(pedido_button, alignment=Qt.AlignCenter)
+        
         # Adicionar coluna ao layout
         self.columns_layout.addLayout(coluna_layout)
         return coluna_layout
 
-    def adicionar_pedido(self, pedido, coluna):
-        pedido_button = QPushButton(str(pedido))
-        pedido_button.setFixedSize(100, 50)
-        pedido_button.clicked.connect(self.mover_pedido)
-        coluna.addWidget(pedido_button, alignment=Qt.AlignCenter)
-    
     def mover_pedido(self):
         button = self.sender()
         current_layout = button.parent().layout()
 
-        # Find the index of the current layout in the main columns layout
+        # Encontrar o índice do layout atual nas colunas principais
         current_index = self.columns_layout.indexOf(current_layout)
 
-        # Move to the next layout if it exists
+        # Mover para o próximo layout, se existir
         if current_index == 0:
             next_layout = self.preparacao_layout
         elif current_index == 1:
@@ -292,10 +293,10 @@ class StatusPedidos(QWidget):
         button = self.sender()
         current_layout = button.parent().layout()
 
-        # Find the index of the current layout in the main columns layout
+        # Encontrar o índice do layout atual nas colunas principais
         current_index = self.columns_layout.indexOf(current_layout)
 
-        # Move to the next layout if it exists
+        # Mover para o próximo layout, se existir
         if current_index == 0:
             next_layout = self.preparacao_layout
         elif current_index == 1:
@@ -358,12 +359,13 @@ class MainWindow(QMainWindow):
         self.buttons["Status dos Pedidos"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
         self.buttons["Relatório de Vendas"].clicked.connect(self.mostrar_relatorio)
         self.buttons["Fazer Pedido"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
-        self.buttons["Processamento de Pedidos"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        self.buttons["Processamento de Pedidos"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
     def atualizar_relatorio(self):
         self.relatorio_vendas.update_table(self.tela_pedido.get_items())
 
     def mostrar_relatorio(self):
+        self.relatorio_vendas.update_table(self.tela_pedido.get_items())
         self.stacked_widget.setCurrentIndex(3)
 
 if __name__ == "__main__":
