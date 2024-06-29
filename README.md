@@ -1,1 +1,3 @@
-<a href = "https://excalidraw.com/#json=X5HUPKiqn08N8pjQ6kE7C,y7BAMpyfJNRmEf6iW0EVVA" target="_blank">Link do esboço do projeto</a>
+O Sanduichero é um programa para gerenciar seu restaurante! Nele você pode registrar pedidos e controlar o andamento deles!
+
+Foi utilizado Python juntamente com o Pyside
