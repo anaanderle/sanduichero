@@ -40,22 +40,8 @@ class StatusPedidos(QWidget):
         for pedido in pedidos:
             pedido_button = QPushButton(str(pedido))
             pedido_button.setFixedSize(50, 50)
-            pedido_button.clicked.connect(self.mover_pedido)
             coluna_layout.addWidget(pedido_button, alignment=Qt.AlignCenter)
         
         # Adicionar coluna ao layout
         self.columns_layout.addLayout(coluna_layout)
         return coluna_layout
-
-    def mover_pedido(self):
-        button = self.sender()
-        current_layout = button.parent().layout()
-
-        # Encontrar o índice do layout atual nas colunas principais
-        current_index = self.columns_layout.indexOf(current_layout)
-
-        # Mover para o próximo layout, se existir
-        if current_index < self.columns_layout.count() - 1:
-            next_layout = self.columns_layout.itemAt(current_index + 1).layout()
-            current_layout.removeWidget(button)
-            next_layout.addWidget(button, alignment=Qt.AlignCenter)
