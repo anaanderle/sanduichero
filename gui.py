@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
             "Status dos Pedidos": QPushButton("Status dos Pedidos"),
             "Relatório de Vendas": QPushButton("Relatório de Vendas"),
             "Fazer Pedido": QPushButton("Fazer Pedido"),
-            "Processamento de Pedidos": QPushButton("Processamento de Pedidos")
+            # "Processamento de Pedidos": QPushButton("Processamento de Pedidos")
         }
 
         # Adicionando botões ao layout
@@ -45,9 +45,9 @@ class MainWindow(QMainWindow):
 
         # Criando o StackedWidget para segurar as telas
         self.stacked_widget = QStackedWidget()
-        self.status_pedidos = StatusPedidos()
+        self.status_pedidos = StatusPedidos(self.queue, self.production, self.finished, self.mover_pedido)
         self.stacked_widget.addWidget(self.status_pedidos)
-        self.tela_pedido = TelaPedido(self.queue, self.items, self.create_order, self.atualizar_relatorio)
+        self.tela_pedido = TelaPedido(self.queue, self.items, self.create_order, self.atualizar_relatorio, self.atualizar_filas)
         self.stacked_widget.addWidget(self.tela_pedido)
         self.processamento_pedidos = ProcessamentoPedidos()
         self.stacked_widget.addWidget(self.processamento_pedidos)
@@ -65,10 +65,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
         # Conectando botões às funções de troca de tela
-        self.buttons["Status dos Pedidos"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
+        self.buttons["Status dos Pedidos"].clicked.connect(self.mostrar_filas)
         self.buttons["Relatório de Vendas"].clicked.connect(self.mostrar_relatorio)
         self.buttons["Fazer Pedido"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
-        self.buttons["Processamento de Pedidos"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
+        # self.buttons["Processamento de Pedidos"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
 
     def atualizar_relatorio(self):
@@ -78,9 +78,32 @@ class MainWindow(QMainWindow):
         self.relatorio_vendas.update_table(self.generate_report())
         self.stacked_widget.setCurrentIndex(3)
 
+    def atualizar_filas(self):
+        self.status_pedidos.update_layout(self.queue, self.production, self.finished)
+
+    def mostrar_filas(self):
+        self.status_pedidos.update_layout(self.queue, self.production, self.finished)
+        self.stacked_widget.setCurrentIndex(0)
+
     def create_order(self, items: list):
-        order = Order(OrderStatus.FINISHED, items)
-        self.finished.enqueue(order)
+        order = Order(OrderStatus.QUEUE, items)
+        self.queue.enqueue(order)
+
+    def mover_pedido(self, orderId):
+        for order in self.queue.orders:
+            if(order.id == orderId):
+                order_found = self.queue.dequeue()
+                self.production.enqueue(order_found)
+                self.atualizar_filas()
+                return
+
+        for order in self.production.orders:
+            if (order.id == orderId):
+                order_found = self.production.dequeue()
+                self.finished.enqueue(order_found)
+                self.atualizar_filas()
+                return
+
 
     def generate_report(self):
         report = []

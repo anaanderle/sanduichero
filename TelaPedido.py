@@ -3,11 +3,12 @@ from PySide6.QtCore import Qt
 from queue import Queue
 
 class TelaPedido(QWidget):
-    def __init__(self, queue: Queue, items: list, create_order, generate_report):
+    def __init__(self, queue: Queue, items: list, create_order, generate_report, atualizar_filas):
         super().__init__()
 
         self.create_order = create_order
         self.generate_report = generate_report
+        self.atualizar_filas = atualizar_filas
 
         # Layout principal da tela de pedido
         self.main_layout = QVBoxLayout()
@@ -81,6 +82,7 @@ class TelaPedido(QWidget):
 
         self.create_order(items)
         self.generate_report()
+        self.atualizar_filas()
         self.pedido_confirmado()
 
     def pedido_confirmado(self):
