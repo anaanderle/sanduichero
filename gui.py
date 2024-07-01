@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QStackedWidget
-from RelatorioVendas import RelatorioVendas
+from report import Report
 from ProcessamentoPedidos import ProcessamentoPedidos
-from TelaPedido import TelaPedido
-from StatusPedido import StatusPedidos
+from orderScreen import OrderScreen
+from orderStatusScreen import OrderStatusScreen
 from item import Item
 from queue import Queue
 from order import Order, OrderStatus
@@ -24,84 +24,72 @@ class MainWindow(QMainWindow):
         self.production = Queue("Em preparação")
         self.finished = Queue("Entregue")
 
-        # Criando o layout principal
         layout = QVBoxLayout()
 
-        # Criando os botões do menu
         self.buttons = {
             "Status dos Pedidos": QPushButton("Status dos Pedidos"),
             "Relatório de Vendas": QPushButton("Relatório de Vendas"),
             "Fazer Pedido": QPushButton("Fazer Pedido"),
-            # "Processamento de Pedidos": QPushButton("Processamento de Pedidos")
         }
 
-        # Adicionando botões ao layout
         for button in self.buttons.values():
             layout.addWidget(button)
 
-        # Criando um widget para segurar os botões
         button_widget = QWidget()
         button_widget.setLayout(layout)
 
-        # Criando o StackedWidget para segurar as telas
         self.stacked_widget = QStackedWidget()
-        self.status_pedidos = StatusPedidos(self.queue, self.production, self.finished, self.mover_pedido)
-        self.stacked_widget.addWidget(self.status_pedidos)
-        self.tela_pedido = TelaPedido(self.queue, self.items, self.create_order, self.atualizar_relatorio, self.atualizar_filas)
-        self.stacked_widget.addWidget(self.tela_pedido)
-        self.processamento_pedidos = ProcessamentoPedidos()
-        self.stacked_widget.addWidget(self.processamento_pedidos)
-        self.relatorio_vendas = RelatorioVendas()
-        self.stacked_widget.addWidget(self.relatorio_vendas)
+        self.order_status = OrderStatusScreen(self.queue, self.production, self.finished, self.move_order)
+        self.stacked_widget.addWidget(self.order_status)
+        self.order_screen = OrderScreen(self.items, self.create_order, self.update_report, self.update_queue)
+        self.stacked_widget.addWidget(self.order_screen)
+        self.reports = Report()
+        self.stacked_widget.addWidget(self.reports)
 
-        # Criando o layout principal da janela
         main_layout = QVBoxLayout()
         main_layout.addWidget(button_widget)
         main_layout.addWidget(self.stacked_widget)
 
-        # Criando um container principal
         container = QWidget()
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
-        # Conectando botões às funções de troca de tela
-        self.buttons["Status dos Pedidos"].clicked.connect(self.mostrar_filas)
-        self.buttons["Relatório de Vendas"].clicked.connect(self.mostrar_relatorio)
+        self.buttons["Status dos Pedidos"].clicked.connect(self.show_queue)
+        self.buttons["Relatório de Vendas"].clicked.connect(self.show_report)
         self.buttons["Fazer Pedido"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
-        # self.buttons["Processamento de Pedidos"].clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
 
-    def atualizar_relatorio(self):
-        self.relatorio_vendas.update_table(self.generate_report())
+    def update_report(self):
+        self.reports.update_table(self.generate_report())
 
-    def mostrar_relatorio(self):
-        self.relatorio_vendas.update_table(self.generate_report())
-        self.stacked_widget.setCurrentIndex(3)
+    def show_report(self):
+        self.reports.update_table(self.generate_report())
+        self.stacked_widget.setCurrentIndex(2)
 
-    def atualizar_filas(self):
-        self.status_pedidos.update_layout(self.queue, self.production, self.finished)
+    def update_queue(self):
+        self.order_status.update_layout(self.queue, self.production, self.finished)
 
-    def mostrar_filas(self):
-        self.status_pedidos.update_layout(self.queue, self.production, self.finished)
+    def show_queue(self):
+        self.order_status.update_layout(self.queue, self.production, self.finished)
         self.stacked_widget.setCurrentIndex(0)
 
     def create_order(self, items: list):
         order = Order(OrderStatus.QUEUE, items)
         self.queue.enqueue(order)
 
-    def mover_pedido(self, orderId):
+    def move_order(self, orderId):
         for order in self.queue.orders:
             if(order.id == orderId):
                 order_found = self.queue.dequeue()
                 self.production.enqueue(order_found)
-                self.atualizar_filas()
+                self.update_queue()
                 return
 
         for order in self.production.orders:
             if (order.id == orderId):
                 order_found = self.production.dequeue()
                 self.finished.enqueue(order_found)
-                self.atualizar_filas()
+                self.update_queue()
                 return
 
 
